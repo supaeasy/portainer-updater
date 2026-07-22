@@ -56,7 +56,10 @@ function renderRow(row) {
     : row.configured
       ? ""
       : "(nicht in stacks.yml konfiguriert)";
-  node.querySelector(".version").textContent = `${row.current_version || "?"} -> ${row.new_version || "?"}`;
+  node.querySelector(".version").textContent = `${row.current_version || "?"} -> ${row.new_version || "?"}${row.version_note ? " *" : ""}`;
+  if (row.version_note) {
+    node.querySelector(".version").title = row.version_note;
+  }
 
   const riskBadge = node.querySelector(".risk-badge");
   const risk = row.risk || "unknown";
@@ -76,6 +79,12 @@ function renderRow(row) {
   });
 
   node.querySelector(".summary").textContent = row.summary || "Analyse laeuft noch oder wurde nicht durchgefuehrt ...";
+
+  if (row.version_note) {
+    const noteEl = node.querySelector(".version-note");
+    noteEl.hidden = false;
+    noteEl.textContent = `* ${row.version_note}`;
+  }
 
   if (row.compose_change_needed) {
     const composeBlock = node.querySelector(".compose-block");

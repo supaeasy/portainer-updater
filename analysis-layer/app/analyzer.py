@@ -23,6 +23,11 @@ Volumes/Ports, oder - besonders wichtig - fest gepinnte Versionen anderer Servic
 der compose-Datei, die zur neuen Version passen muessen, wie es z.B. bei immich \
 regelmaessig vorkommt).
 
+Falls dir ein "Hinweis zur Versionsermittlung" mitgegeben wird, bedeutet das: die \
+aktuelle und/oder neue Version wurde nur geschaetzt (kein fester Versions-Tag im \
+Container, z.B. :latest). Erwaehne diese Unsicherheit kurz in der summary, damit \
+der Betreiber weiss, dass die Versionsangabe eine Naeherung ist.
+
 Antworte AUSSCHLIESSLICH mit einem JSON-Objekt, keine Erklaerung drumherum, exakt in \
 diesem Format:
 {
@@ -46,11 +51,13 @@ async def analyze_update(
     release_notes: str,
     compose_content: str,
     extra_notes: str,
+    version_note: str = "",
 ) -> dict:
     user_prompt = f"""Container: {container}
 Image: {image_name}
 Aktuelle Version: {current_version}
 Neue Version: {new_version}
+{f"Hinweis zur Versionsermittlung: {version_note}" if version_note else ""}
 
 Zusaetzlicher Kontext vom Betreiber: {extra_notes or "(keiner)"}
 

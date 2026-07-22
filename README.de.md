@@ -126,9 +126,19 @@ anpassbar). WUD-eigenes UI (optional, zur Kontrolle): `http://<host>:3939`.
   also ohne Anpassung funktionieren. Bei einem spaeteren Upgrade auf eine
   neuere Portainer-Version im Zweifel `PORTAINER_URL/api/docs` (Swagger) der
   eigenen Instanz gegenpruefen.
-- Digest-only-Updates (kein Versions-Tag, z.B. `:latest`) koennen nicht per
-  GitHub-Release verglichen werden - werden im Dashboard als "Update
-  erkannt, keine Analyse moeglich" markiert.
+- Auch Images ohne Versions-Tag (z.B. `:latest`, von WUD per Digest-Aenderung
+  erkannt) werden analysiert: die aktuelle Version wird aus einem
+  OCI-Versions-Label des Images gelesen, falls vorhanden
+  (`org.opencontainers.image.version` o.ae.), sonst ueber das
+  Erstellungsdatum des laufenden Images genaehert (naechstliegendes
+  GitHub-Release davor). Die neue Version ist schlicht das aktuellste
+  GitHub-Release des Repos. Da das eine Naeherung und kein exakter
+  Tag-Abgleich ist, markiert das Dashboard diese Zeilen mit einem `*` und
+  einem erklaerenden Hinweis (der auch an Claude mitgegeben wird, das die
+  Unsicherheit in seiner Zusammenfassung erwaehnt). Nur wenn sich weder ein
+  Label noch ein passendes Release finden laesst (z.B. Repo ohne Releases,
+  oder Image ohne Label und ohne verwertbares Erstellungsdatum), bleibt es
+  bei "keine Analyse moeglich".
 - Der von Claude vorgeschlagene `compose_patch` ist ein Vorschlag, kein
   garantiert korrekter Patch. Vor "Aenderung uebernehmen" den Diff im
   Dashboard pruefen, besonders bei Stacks mit sensiblen Daten (Datenbanken).

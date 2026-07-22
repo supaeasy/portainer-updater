@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS updates (
     image_name TEXT,
     current_version TEXT,
     new_version TEXT,
+    version_note TEXT,
     kind TEXT,
     status TEXT NOT NULL DEFAULT 'pending',
     risk TEXT,
@@ -57,7 +58,8 @@ def get_existing(container: str, current_version: str, new_version: str):
 
 
 def upsert_pending(container: str, portainer_stack_name: str, image_name: str,
-                    current_version: str, new_version: str, kind: str):
+                    current_version: str, new_version: str, kind: str,
+                    version_note: str = ""):
     """Legt einen Eintrag an, falls er noch nicht existiert (idempotent), ohne
     eine bestehende Analyse zu ueberschreiben."""
     now = time.time()
@@ -67,12 +69,12 @@ def upsert_pending(container: str, portainer_stack_name: str, image_name: str,
             """
             INSERT INTO updates
                 (container, portainer_stack_name, image_name, current_version,
-                 new_version, kind, status, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+                 new_version, version_note, kind, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
             ON CONFLICT(container, current_version, new_version) DO NOTHING
             """,
             (container, portainer_stack_name, image_name, current_version,
-             new_version, kind, now, now),
+             new_version, version_note, kind, now, now),
         )
         conn.commit()
     finally:

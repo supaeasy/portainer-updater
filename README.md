@@ -124,9 +124,17 @@ Dashboard: `http://<host>:8000` (port configurable via `DASHBOARD_PORT` in
   should work without changes. If you later upgrade to a newer Portainer
   version, double-check against `PORTAINER_URL/api/docs` (Swagger) on your
   own instance if in doubt.
-- Digest-only updates (no version tag, e.g. `:latest`) can't be compared via
-  GitHub releases - the dashboard flags these as "update detected, no
-  analysis possible".
+- Images without a version tag (e.g. `:latest`, detected by WUD via a digest
+  change) still get analyzed: the current version is read from an OCI version
+  label on the image if one is set (`org.opencontainers.image.version` etc.),
+  otherwise approximated by matching the running image's build date to the
+  nearest GitHub release before it; the new version is simply the repo's
+  latest release. Since this is an approximation rather than an exact tag
+  match, the dashboard marks these rows with a `*` and an explanatory note
+  (also passed to Claude, which mentions the uncertainty in its summary).
+  Only falls back to "no analysis possible" when neither a label nor a
+  matching release can be found at all (e.g. repo has no releases, or the
+  image lacks both a label and a build-date it can be matched against).
 - The `compose_patch` Claude suggests is just that - a suggestion, not a
   guaranteed-correct patch. Review the diff on the dashboard before enabling
   "apply change", especially for stacks holding sensitive data (databases).

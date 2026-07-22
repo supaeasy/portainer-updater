@@ -100,6 +100,15 @@ button.primary { background: var(--accent); color: white; border-color: var(--ac
 
 .summary { white-space: pre-wrap; line-height: 1.4; }
 
+.version-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+  border-left: 2px solid var(--muted);
+  padding-left: 0.5rem;
+  margin: 0 0 0.5rem;
+}
+
 .compose-block {
   background: rgba(127,127,127,0.08);
   border-radius: 6px;

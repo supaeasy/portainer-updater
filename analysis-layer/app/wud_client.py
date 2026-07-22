@@ -39,4 +39,8 @@ def extract_update_info(container: dict) -> dict | None:
         "kind": kind,
         "current_version": current_version,
         "new_version": new_version,
+        # Fuer Digest-only-Updates (z.B. :latest): kein Versions-Tag vorhanden,
+        # aber Erstellungsdatum + ggf. OCI-Version-Label helfen bei der Annaeherung.
+        "image_created": image.get("created"),
+        "labels": container.get("labels") or {},
     }

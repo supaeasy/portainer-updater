@@ -69,9 +69,14 @@ async def api_reanalyze(container: str):
     info = {
         "container": container,
         "image_name": row["image_name"],
-        "kind": row["kind"],
+        # "tag" erzwingen: current/new_version sind hier bereits aufgeloeste
+        # Versions-Strings (auch bei urspruenglich per Digest erkannten
+        # Updates - siehe pipeline._resolve_versions_for_untagged_update).
+        # Ein erneuter Resolve-Versuch wuerde ohne labels/image_created scheitern.
+        "kind": "tag",
         "current_version": row["current_version"],
         "new_version": row["new_version"],
+        "version_note": row["version_note"] or "",
     }
     await pipeline.process_update(info, _stacks_config)
     return {"ok": True}
