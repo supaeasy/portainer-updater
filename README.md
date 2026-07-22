@@ -12,16 +12,16 @@ redeployed via the Portainer API.
 ## Architecture
 
 ```
-┌──────┐   Update detected   ┌──────────────────┐   Releases    ┌────────┐
-│ WUD  │ ──────────────────▶ │  analysis-layer   │ ────────────▶ │ GitHub │
-│      │  (http trigger)     │  (FastAPI)        │               └────────┘
-└──────┘                     │                   │   compose.yml  ┌───────────┐
+┌──────┐   Update detected   ┌───────────────────┐   Releases     ┌────────┐
+│ WUD  │ ─────────────────▶ │  analysis-layer    │ ────────────▶ │ GitHub │
+│      │  (http trigger)     │  (FastAPI)        │                └────────┘
+└──────┘                     │                   │   compose.yml   ┌───────────┐
    ▲                         │                   │ ─────────────▶ │ Portainer │
-   │ read-only                │                   │ ◀───────────── │    API    │
-   │ docker.sock               │  Claude analysis  │  redeploy       └───────────┘
-   └─────────────────────────  + SQLite storage    │
-                               │  + dashboard UI    │
-                               └──────────────────┘
+   │ read-only               │                   │ ◀───────────── │    API    │
+   │ docker.sock             │  Claude analysis  │  redeploy       └───────────┘
+   └─────────────────────────  + SQLite storage  │
+                             │  + dashboard UI   │
+                             └───────────────────┘
                                         ▲
                                         │ Browser (checkboxes, "update")
 ```
