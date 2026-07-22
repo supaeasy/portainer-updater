@@ -70,14 +70,38 @@ Portainer UI -> User settings -> Access tokens -> Add access token.
 scoped via RBAC to only the environments this tool should manage - not the
 admin account. Otherwise the key can modify *any* stack in Portainer.
 
-### 2. Configure the repo
+### 2. Copy files onto the host
 
-```bash
-cp .env.example .env
-cp stacks.yml.example stacks.yml
+This stack is deployed via bind mounts (Portainer "Web editor", not the Git
+deployment method), so `analysis-layer/` needs to physically exist on the
+host - Docker needs it there for the build context, and unlike a Git-backed
+Portainer stack it won't get cloned there automatically. Copy onto your host,
+under one directory (`CONFIG_DIR`, default `/volume2/docker/portainer-updater`):
+
+```
+/volume2/docker/portainer-updater/
+├── analysis-layer/       # from this repo: Dockerfile, requirements.txt, app/
+└── stacks.yml            # your filled-in copy of stacks.yml.example
 ```
 
-Fill in `.env`: `PORTAINER_URL`, `PORTAINER_API_KEY`, `ANTHROPIC_API_KEY`.
+`data/wud` and `data/analysis` (SQLite storage) get created automatically on
+first start - no need to pre-create those.
+
+Fill in `stacks.yml`: for every container you want watched, enter the exact
+Docker container name, the Portainer stack name, the Portainer environment
+ID, and the GitHub repo (`owner/repo`) used for the changelog analysis.
+Containers without an entry show up on the dashboard flagged as "not
+configured in stacks.yml", but are neither analyzed nor updated
+automatically.
+
+### 3. Configure environment variables
+
+`.env.example` in this repo lists every variable with explanations - it's a
+reference for what to fill in, not a file you deploy (in Portainer, these go
+directly into the stack's "Environment variables" dialog, see step 4).
+Required: `CONFIG_DIR` (if different from the default above), `PORTAINER_URL`,
+`PORTAINER_API_KEY`, `ANTHROPIC_API_KEY`.
+
 Optionally `GITHUB_TOKEN` (without a token, GitHub's public rate limit of
 60 requests/hour applies, which can get tight with many stacks; with a token,
 5000/hour). Create it as a **fine-grained** personal access token (GitHub ->
@@ -92,21 +116,14 @@ this tool doesn't currently support (only one global `GITHUB_TOKEN`). For your
 own repos the changelog analysis is rarely useful anyway (you already know
 what you changed) - just leave `github_repo` unset for those entries.
 
-Fill in `stacks.yml`: for every container you want watched, enter the exact
-Docker container name, the Portainer stack name, the Portainer environment
-ID, and the GitHub repo (`owner/repo`) used for the changelog analysis.
-Containers without an entry show up on the dashboard flagged as "not
-configured in stacks.yml", but are neither analyzed nor updated
-automatically.
+### 4. Create the stack in Portainer
 
-### 3. Start it
+Stacks -> Add stack -> Web editor -> paste the contents of `docker-compose.yml`
+-> under "Environment variables" set the variables from step 3 -> Deploy the
+stack.
 
-```bash
-docker compose up -d
-```
-
-Dashboard: `http://<host>:8000` (port configurable via `DASHBOARD_PORT` in
-`.env`). WUD's own UI (optional, for cross-checking): `http://<host>:3939`.
+Dashboard: `http://<host>:8000` (port configurable via `DASHBOARD_PORT`).
+WUD's own UI (optional, for cross-checking): `http://<host>:3939`.
 
 ## Day-to-day flow
 

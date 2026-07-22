@@ -1,12 +1,23 @@
+# portainer-updater
+#
+# Ausgelegt fuer Deployment per Bind-Mounts statt Portainer-Git-Stack: ALLE
+# Mounts (Build-Context UND Daten) zeigen auf absolute Pfade unter CONFIG_DIR
+# (Default: /volume2/docker/portainer-updater). Vor dem ersten Start dorthin
+# kopieren:
+#   - analysis-layer/   (Dockerfile, requirements.txt, app/ aus diesem Repo)
+#   - stacks.yml         (deine ausgefuellte Kopie von stacks.yml.example)
+# data/wud und data/analysis legt Docker beim ersten Start selbst an.
+
 services:
+
   wud:
     image: getwud/wud:latest
     container_name: wud
     restart: unless-stopped
     volumes:
-      # Nur lesend - WUD muss Container nur inspizieren, nicht verändern.
+      # Nur lesend - WUD muss Container nur inspizieren, nicht veraendern.
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - wud_data:/store
+      - ${CONFIG_DIR:-/volume2/docker/portainer-updater}/data/wud:/store
     environment:
       # Ruft unseren Analyse-Layer auf, sobald ein Update erkannt wird.
       - WUD_TRIGGER_HTTP_ANALYSIS_URL=http://analysis-layer:8000/webhook/wud
@@ -17,7 +28,8 @@ services:
       - "${WUD_PORT:-3939}:3000"
 
   analysis-layer:
-    build: ./analysis-layer
+    build:
+      context: ${CONFIG_DIR:-/volume2/docker/portainer-updater}/analysis-layer
     container_name: update-analysis
     restart: unless-stopped
     depends_on:
@@ -31,11 +43,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - ANALYSIS_POLL_INTERVAL_MINUTES=${ANALYSIS_POLL_INTERVAL_MINUTES:-60}
     volumes:
-      - ./stacks.yml:/app/stacks.yml:ro
-      - analysis_data:/app/data
+      - ${CONFIG_DIR:-/volume2/docker/portainer-updater}/stacks.yml:/app/stacks.yml:ro
+      - ${CONFIG_DIR:-/volume2/docker/portainer-updater}/data/analysis:/app/data
     ports:
       - "${DASHBOARD_PORT:-8000}:8000"
-
-volumes:
-  wud_data:
-  analysis_data:

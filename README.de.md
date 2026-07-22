@@ -71,14 +71,39 @@ anlegen, der per RBAC nur auf die Environments zugreifen darf, die dieses Tool
 verwalten soll - nicht den Admin-Account. Der Key kann sonst *jeden* Stack in
 Portainer veraendern.
 
-### 2. Repo konfigurieren
+### 2. Dateien auf den Host kopieren
 
-```bash
-cp .env.example .env
-cp stacks.yml.example stacks.yml
+Dieser Stack wird per Bind-Mounts deployed (Portainer "Web editor", nicht die
+Git-Deployment-Methode) - `analysis-layer/` muss deshalb physisch auf dem Host
+liegen: Docker braucht es dort fuer den Build-Context, und anders als bei
+einem Git-basierten Portainer-Stack wird es nicht automatisch dorthin
+geklont. Auf den Host kopieren, unter einem Verzeichnis (`CONFIG_DIR`,
+Default `/volume2/docker/portainer-updater`):
+
+```
+/volume2/docker/portainer-updater/
+├── analysis-layer/       # aus diesem Repo: Dockerfile, requirements.txt, app/
+└── stacks.yml            # deine ausgefuellte Kopie von stacks.yml.example
 ```
 
-`.env` ausfuellen: `PORTAINER_URL`, `PORTAINER_API_KEY`, `ANTHROPIC_API_KEY`.
+`data/wud` und `data/analysis` (SQLite-Speicher) werden beim ersten Start
+automatisch angelegt - die musst du nicht vorher erstellen.
+
+`stacks.yml` ausfuellen: pro Container, der ueberwacht werden soll, den
+exakten Docker-Containernamen, den Portainer-Stacknamen, die
+Portainer-Environment-ID und das GitHub-Repo (`owner/repo`) fuer die
+Changelog-Analyse eintragen. Container ohne Eintrag tauchen im Dashboard mit
+dem Hinweis "nicht in stacks.yml konfiguriert" auf, werden aber nicht
+automatisch analysiert oder aktualisiert.
+
+### 3. Umgebungsvariablen konfigurieren
+
+`.env.example` in diesem Repo listet jede Variable mit Erklaerung auf - das
+ist eine Referenz zum Ausfuellen, keine Datei, die du deployst (in Portainer
+kommen die Werte direkt in den "Environment variables"-Dialog des Stacks,
+siehe Schritt 4). Pflicht: `CONFIG_DIR` (falls abweichend vom Default oben),
+`PORTAINER_URL`, `PORTAINER_API_KEY`, `ANTHROPIC_API_KEY`.
+
 Optional `GITHUB_TOKEN` (ohne Token gilt GitHubs oeffentliches Rate-Limit von
 60 Requests/Stunde - bei vielen Stacks ggf. eng; mit Token 5000/Stunde).
 Als **Fine-grained** Personal Access Token anlegen (GitHub -> Settings ->
@@ -94,21 +119,14 @@ Permission "Contents: Read-only", was dieses Tool aktuell nicht unterstuetzt
 Changelog-Analyse ohnehin selten etwas (man weiss ja selbst, was man geaendert
 hat) - dort `github_repo` einfach weglassen.
 
-`stacks.yml` ausfuellen: pro Container, der ueberwacht werden soll, den
-exakten Docker-Containernamen, den Portainer-Stacknamen, die
-Portainer-Environment-ID und das GitHub-Repo (`owner/repo`) fuer die
-Changelog-Analyse eintragen. Container ohne Eintrag tauchen im Dashboard mit
-dem Hinweis "nicht in stacks.yml konfiguriert" auf, werden aber nicht
-automatisch analysiert oder aktualisiert.
+### 4. Stack in Portainer anlegen
 
-### 3. Starten
+Stacks -> Add stack -> Web editor -> Inhalt von `docker-compose.yml`
+reinkopieren -> unter "Environment variables" die Variablen aus Schritt 3
+setzen -> Stack deployen.
 
-```bash
-docker compose up -d
-```
-
-Dashboard: `http://<host>:8000` (Port ueber `DASHBOARD_PORT` in `.env`
-anpassbar). WUD-eigenes UI (optional, zur Kontrolle): `http://<host>:3939`.
+Dashboard: `http://<host>:8000` (Port ueber `DASHBOARD_PORT` anpassbar).
+WUD-eigenes UI (optional, zur Kontrolle): `http://<host>:3939`.
 
 ## Ablauf im Alltag
 
