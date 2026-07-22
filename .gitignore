@@ -1,0 +1,17 @@
+# Echte Zugangsdaten bleiben lokal auf dem NAS
+.env
+*.local
+
+# Deine tatsaechliche Stack-Konfiguration (Container-/Stacknamen deines NAS)
+stacks.yml
+
+# Persistente Laufzeitdaten (SQLite-DB der Analyse-Ergebnisse, WUD-Store)
+data/
+
+# OS-Muell
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc

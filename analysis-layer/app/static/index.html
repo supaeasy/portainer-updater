@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <title>Docker Update Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Docker Update Dashboard</h1>
+    <div class="actions">
+      <button id="rescan-btn">Jetzt neu pruefen</button>
+      <button id="apply-btn" class="primary" disabled>Ausgewaehlte aktualisieren</button>
+    </div>
+  </header>
+
+  <main id="list"></main>
+
+  <template id="row-template">
+    <section class="update-row">
+      <div class="row-head">
+        <input type="checkbox" class="select-box" />
+        <span class="container-name"></span>
+        <span class="stack-name"></span>
+        <span class="version"></span>
+        <span class="risk-badge"></span>
+        <span class="status-badge"></span>
+        <button class="toggle-details">Details</button>
+      </div>
+      <div class="row-details" hidden>
+        <p class="summary"></p>
+        <div class="compose-block" hidden>
+          <p class="compose-explanation"></p>
+          <label class="compose-toggle">
+            <input type="checkbox" class="apply-patch-box" />
+            Vorgeschlagene compose-Aenderung uebernehmen
+          </label>
+          <details>
+            <summary>Vorgeschlagene compose.yml anzeigen</summary>
+            <pre class="compose-patch"></pre>
+          </details>
+        </div>
+        <div class="row-actions">
+          <button class="dismiss-btn">Ignorieren</button>
+          <button class="reanalyze-btn">Analyse erneuern</button>
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

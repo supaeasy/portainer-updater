@@ -1,0 +1,28 @@
+# Kopiere diese Datei nach stacks.yml und trage deine echten Werte ein.
+# stacks.yml wird nicht ins Repo committed (siehe .gitignore).
+#
+# container:              exakter Docker-Containername, wie WUD/Portainer ihn zeigt
+# portainer_stack_name:   Name des Stacks in Portainer (nur fuer die Anzeige im Dashboard)
+# portainer_endpoint_id:  Environment-ID in Portainer (Portainer UI -> Environments,
+#                         oder GET /api/endpoints mit deinem API-Key)
+# github_repo:            "owner/repo" des Projekts, dessen Releases fuer die
+#                         Breaking-Change-Analyse herangezogen werden
+# notes:                  Freitext, der bei jeder Analyse als Zusatzkontext an Claude
+#                         mitgegeben wird (z.B. bekannte Stolperfallen)
+
+stacks:
+  - container: immich_server
+    portainer_stack_name: immich
+    portainer_endpoint_id: 1
+    github_repo: immich-app/immich
+    notes: >
+      Immich pinnt einzelne Komponenten (z.B. Postgres/vectors-Image, ML-Image)
+      auf exakte Versionen in der compose.yml. Bei jedem Server-Upgrade pruefen,
+      ob die docker-compose.yml aus dem offiziellen immich-Release-Tag ebenfalls
+      neue Pins fuer diese Komponenten enthaelt.
+
+  - container: bring2tandoor
+    portainer_stack_name: tandoor2bring
+    portainer_endpoint_id: 1
+    github_repo: supaeasy/tandoor2bring
+    notes: ""

@@ -1,0 +1,41 @@
+services:
+  wud:
+    image: getwud/wud:latest
+    container_name: wud
+    restart: unless-stopped
+    volumes:
+      # Nur lesend - WUD muss Container nur inspizieren, nicht verändern.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - wud_data:/store
+    environment:
+      # Ruft unseren Analyse-Layer auf, sobald ein Update erkannt wird.
+      - WUD_TRIGGER_HTTP_ANALYSIS_URL=http://analysis-layer:8000/webhook/wud
+      - WUD_TRIGGER_HTTP_ANALYSIS_METHOD=POST
+      # Wie oft WUD alle Container prueft (Cron-Syntax). Standard: alle 6h.
+      - WUD_WATCHER_LOCAL_CRON=${WUD_WATCHER_CRON:-0 0 */6 * * *}
+    ports:
+      - "${WUD_PORT:-3939}:3000"
+
+  analysis-layer:
+    build: ./analysis-layer
+    container_name: update-analysis
+    restart: unless-stopped
+    depends_on:
+      - wud
+    environment:
+      - WUD_API_URL=http://wud:3000
+      - PORTAINER_URL=${PORTAINER_URL}
+      - PORTAINER_API_KEY=${PORTAINER_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-5}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - ANALYSIS_POLL_INTERVAL_MINUTES=${ANALYSIS_POLL_INTERVAL_MINUTES:-60}
+    volumes:
+      - ./stacks.yml:/app/stacks.yml:ro
+      - analysis_data:/app/data
+    ports:
+      - "${DASHBOARD_PORT:-8000}:8000"
+
+volumes:
+  wud_data:
+  analysis_data:
