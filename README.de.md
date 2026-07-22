@@ -80,7 +80,19 @@ cp stacks.yml.example stacks.yml
 
 `.env` ausfuellen: `PORTAINER_URL`, `PORTAINER_API_KEY`, `ANTHROPIC_API_KEY`.
 Optional `GITHUB_TOKEN` (ohne Token gilt GitHubs oeffentliches Rate-Limit von
-60 Requests/Stunde - bei vielen Stacks ggf. eng).
+60 Requests/Stunde - bei vielen Stacks ggf. eng; mit Token 5000/Stunde).
+Als **Fine-grained** Personal Access Token anlegen (GitHub -> Settings ->
+Developer settings -> Fine-grained tokens -> Generate new token), Repository
+access auf **"Public Repositories (read-only)"** setzen und bei Permissions
+nichts ankreuzen - dieser Zugriffstyp gibt automatisch Lesezugriff auf die
+Releases aller oeffentlichen Repos, mehr braucht dieses Tool nicht. Das deckt
+jeden `github_repo`-Eintrag in `stacks.yml` ab, der auf ein oeffentliches Repo
+zeigt (z.B. immich). Fuer eigene PRIVATE Repos reicht das nicht - dafuer
+braeuchte man einen separaten Token mit "Only select repositories" +
+Permission "Contents: Read-only", was dieses Tool aktuell nicht unterstuetzt
+(nur ein globaler `GITHUB_TOKEN`). Fuer eigene Repos bringt die
+Changelog-Analyse ohnehin selten etwas (man weiss ja selbst, was man geaendert
+hat) - dort `github_repo` einfach weglassen.
 
 `stacks.yml` ausfuellen: pro Container, der ueberwacht werden soll, den
 exakten Docker-Containernamen, den Portainer-Stacknamen, die

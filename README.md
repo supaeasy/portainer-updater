@@ -79,7 +79,18 @@ cp stacks.yml.example stacks.yml
 
 Fill in `.env`: `PORTAINER_URL`, `PORTAINER_API_KEY`, `ANTHROPIC_API_KEY`.
 Optionally `GITHUB_TOKEN` (without a token, GitHub's public rate limit of
-60 requests/hour applies, which can get tight with many stacks).
+60 requests/hour applies, which can get tight with many stacks; with a token,
+5000/hour). Create it as a **fine-grained** personal access token (GitHub ->
+Settings -> Developer settings -> Fine-grained tokens -> Generate new token),
+with repository access set to **"Public Repositories (read-only)"** and no
+additional permissions checked - that access type already grants read access
+to every public repo's releases, which is all this tool needs. This covers
+every `github_repo` entry in `stacks.yml` that points at a public repo (e.g.
+immich). It does *not* cover your own private repos - those would need a
+separate token with "Only select repositories" + "Contents: Read-only", which
+this tool doesn't currently support (only one global `GITHUB_TOKEN`). For your
+own repos the changelog analysis is rarely useful anyway (you already know
+what you changed) - just leave `github_repo` unset for those entries.
 
 Fill in `stacks.yml`: for every container you want watched, enter the exact
 Docker container name, the Portainer stack name, the Portainer environment
