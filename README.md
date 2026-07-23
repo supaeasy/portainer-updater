@@ -70,18 +70,18 @@ Portainer UI -> User settings -> Access tokens -> Add access token.
 scoped via RBAC to only the environments this tool should manage - not the
 admin account. Otherwise the key can modify *any* stack in Portainer.
 
-### 2. Copy files onto the host
+### 2. Copy `stacks.yml` onto the host
 
-This stack is deployed via bind mounts (Portainer "Web editor", not the Git
-deployment method), so `analysis-layer/` needs to physically exist on the
-host - Docker needs it there for the build context, and unlike a Git-backed
-Portainer stack it won't get cloned there automatically. Copy onto your host,
-under one directory (`CONFIG_DIR`, default `/volume2/docker/portainer-updater`):
+The `analysis-layer` image is built by GitHub Actions and published to
+`ghcr.io/supaeasy/portainer-updater-analysis` (see
+`.github/workflows/build-image.yml`) - Portainer only pulls it, it never
+builds anything itself, so you don't need to copy the repo's source onto the
+NAS at all. The only file that needs to exist there is `stacks.yml`, under
+one directory (`CONFIG_DIR`, default `/volume2/docker/portainer-updater`):
 
 ```
 /volume2/docker/portainer-updater/
-├── analysis-layer/       # from this repo: Dockerfile, requirements.txt, app/
-└── stacks.yml            # can start out as just "stacks: []" - see below
+└── stacks.yml   # can start out as just "stacks: []" - see below
 ```
 
 `data/wud` and `data/analysis` (SQLite storage) get created automatically on
@@ -89,6 +89,13 @@ first start - no need to pre-create those. `stacks.yml` itself, though, has
 to exist as a *file* before the first deploy (even if empty, i.e. just
 `stacks: []`) - if it doesn't, Docker's bind mount creates a directory in its
 place instead, which breaks the container on startup.
+
+**One-time step after the first Actions run:** GHCR packages sometimes
+default to private even in a public repo. Check
+`https://github.com/supaeasy/portainer-updater/pkgs/container/portainer-updater-analysis`
+-> Package settings -> Change visibility -> Public, otherwise Portainer's
+pull will fail with an authentication error (no registry credentials are
+configured in the compose file, intentionally, for a public image).
 
 You don't have to fill in `stacks.yml` by hand: once the stack is running,
 click **"Stacks entdecken"** ("Discover stacks") on the dashboard. It reads
@@ -138,6 +145,15 @@ stack.
 
 Dashboard: `http://<host>:8000` (port configurable via `DASHBOARD_PORT`).
 WUD's own UI (optional, for cross-checking): `http://<host>:3939`.
+
+### Updating this tool itself
+
+Every push to `analysis-layer/` rebuilds and republishes the image via
+GitHub Actions, but Portainer won't notice on its own since it never checks
+back on a running stack. To pick up a new version: Stacks -> portainer-updater
+(or whatever you named it) -> Editor -> Update the stack, with "Re-pull image"
+/ "Force update" enabled (label depends on your Portainer version) - that's
+the same mechanism this tool itself uses to update *other* stacks.
 
 ## Day-to-day flow
 

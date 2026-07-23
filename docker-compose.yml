@@ -1,11 +1,16 @@
 # portainer-updater
 #
-# Ausgelegt fuer Deployment per Bind-Mounts statt Portainer-Git-Stack: ALLE
-# Mounts (Build-Context UND Daten) zeigen auf absolute Pfade unter CONFIG_DIR
-# (Default: /volume2/docker/portainer-updater). Vor dem ersten Start dorthin
-# kopieren:
-#   - analysis-layer/   (Dockerfile, requirements.txt, app/ aus diesem Repo)
-#   - stacks.yml         (deine ausgefuellte Kopie von stacks.yml.example)
+# analysis-layer wird NICHT lokal gebaut, sondern per GitHub Actions als
+# fertiges Image nach ghcr.io/supaeasy/portainer-updater-analysis gepusht
+# (siehe .github/workflows/build-image.yml) - Portainer muss dafuer nur noch
+# pullen, kein Build-Context noetig (der waere fuer Portainer als Container
+# ohnehin nur sichtbar, wenn der Host-Pfad zusaetzlich in den
+# Portainer-Container selbst gemountet ist).
+#
+# Ausgelegt fuer Deployment per Bind-Mounts statt Portainer-Git-Stack: die
+# Daten-Mounts zeigen auf absolute Pfade unter CONFIG_DIR (Default:
+# /volume2/docker/portainer-updater). Vor dem ersten Start dorthin kopieren:
+#   - stacks.yml   (kann zu Beginn auch nur "stacks: []" sein, siehe README)
 # data/wud und data/analysis legt Docker beim ersten Start selbst an.
 
 services:
@@ -28,8 +33,7 @@ services:
       - "${WUD_PORT:-3939}:3000"
 
   analysis-layer:
-    build:
-      context: ${CONFIG_DIR:-/volume2/docker/portainer-updater}/analysis-layer
+    image: ghcr.io/supaeasy/portainer-updater-analysis:latest
     container_name: update-analysis
     restart: unless-stopped
     depends_on:

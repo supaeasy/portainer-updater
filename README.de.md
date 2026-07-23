@@ -71,19 +71,19 @@ anlegen, der per RBAC nur auf die Environments zugreifen darf, die dieses Tool
 verwalten soll - nicht den Admin-Account. Der Key kann sonst *jeden* Stack in
 Portainer veraendern.
 
-### 2. Dateien auf den Host kopieren
+### 2. `stacks.yml` auf den Host kopieren
 
-Dieser Stack wird per Bind-Mounts deployed (Portainer "Web editor", nicht die
-Git-Deployment-Methode) - `analysis-layer/` muss deshalb physisch auf dem Host
-liegen: Docker braucht es dort fuer den Build-Context, und anders als bei
-einem Git-basierten Portainer-Stack wird es nicht automatisch dorthin
-geklont. Auf den Host kopieren, unter einem Verzeichnis (`CONFIG_DIR`,
-Default `/volume2/docker/portainer-updater`):
+Das `analysis-layer`-Image wird von GitHub Actions gebaut und nach
+`ghcr.io/supaeasy/portainer-updater-analysis` gepusht (siehe
+`.github/workflows/build-image.yml`) - Portainer pullt es nur noch, baut
+selbst nichts mehr. Du musst den Quellcode also gar nicht mehr auf den NAS
+kopieren. Die einzige Datei, die dort existieren muss, ist `stacks.yml`,
+unter einem Verzeichnis (`CONFIG_DIR`, Default
+`/volume2/docker/portainer-updater`):
 
 ```
 /volume2/docker/portainer-updater/
-├── analysis-layer/       # aus diesem Repo: Dockerfile, requirements.txt, app/
-└── stacks.yml            # kann zu Beginn einfach "stacks: []" sein - siehe unten
+└── stacks.yml   # kann zu Beginn einfach "stacks: []" sein - siehe unten
 ```
 
 `data/wud` und `data/analysis` (SQLite-Speicher) werden beim ersten Start
@@ -92,6 +92,14 @@ selbst muss aber schon vor dem ersten Deploy als *Datei* existieren (notfalls
 leer, also nur `stacks: []`) - sonst legt Docker beim Bind-Mount stattdessen
 ein Verzeichnis an dieser Stelle an, was den Container beim Start zum
 Absturz bringt.
+
+**Einmaliger Schritt nach dem ersten Actions-Lauf:** GHCR-Pakete stehen
+manchmal trotz oeffentlichem Repo erstmal auf privat. Unter
+`https://github.com/supaeasy/portainer-updater/pkgs/container/portainer-updater-analysis`
+-> Package settings -> Change visibility -> Public pruefen/setzen, sonst
+schlaegt Portainers Pull mit einem Auth-Fehler fehl (in der compose.yml sind
+absichtlich keine Registry-Zugangsdaten hinterlegt, da das Image oeffentlich
+sein soll).
 
 `stacks.yml` musst du nicht von Hand ausfuellen: sobald der Stack laeuft,
 auf **"Stacks entdecken"** im Dashboard klicken. Das liest alle Stacks ueber
@@ -143,6 +151,15 @@ setzen -> Stack deployen.
 
 Dashboard: `http://<host>:8000` (Port ueber `DASHBOARD_PORT` anpassbar).
 WUD-eigenes UI (optional, zur Kontrolle): `http://<host>:3939`.
+
+### Dieses Tool selbst aktualisieren
+
+Jeder Push nach `analysis-layer/` baut das Image neu und pusht es erneut,
+aber Portainer merkt das bei einem bereits laufenden Stack nicht von selbst.
+Um eine neue Version zu uebernehmen: Stacks -> portainer-updater (oder wie du
+ihn genannt hast) -> Editor -> Update the stack, mit "Re-pull image" /
+"Force update" aktiviert (Beschriftung je nach Portainer-Version) - derselbe
+Mechanismus, den dieses Tool selbst nutzt, um *andere* Stacks zu aktualisieren.
 
 ## Ablauf im Alltag
 
