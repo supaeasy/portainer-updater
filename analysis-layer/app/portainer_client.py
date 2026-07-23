@@ -28,6 +28,20 @@ async def get_stack_file(stack_id: int) -> str:
         return resp.json().get("StackFileContent", "")
 
 
+async def list_containers(endpoint_id: int) -> list[dict]:
+    """Container eines Environments ueber Portainers Docker-API-Proxy
+    (/api/endpoints/{id}/docker/... spiegelt die rohe Docker-API 1:1 -
+    https://docs.docker.com/reference/api/engine/#tag/Container/operation/ContainerList).
+    Rueckgabe im Docker-Rohformat: Id, Names, Image, Labels, State, Status."""
+    async with httpx.AsyncClient(timeout=30, headers=_headers()) as client:
+        resp = await client.get(
+            f"{config.PORTAINER_URL}/api/endpoints/{endpoint_id}/docker/containers/json",
+            params={"all": "true"},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+
 async def find_stack_by_name(name: str) -> dict | None:
     stacks = await list_stacks()
     for s in stacks:

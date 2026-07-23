@@ -9,10 +9,23 @@
   <header>
     <h1>Docker Update Dashboard</h1>
     <div class="actions">
+      <button id="discover-btn">Stacks entdecken</button>
       <button id="rescan-btn">Jetzt neu pruefen</button>
       <button id="apply-btn" class="primary" disabled>Ausgewaehlte aktualisieren</button>
     </div>
   </header>
+
+  <section id="discover-panel" hidden>
+    <div class="discover-summary"></div>
+    <details>
+      <summary>Generierte stacks.yml anzeigen</summary>
+      <pre class="discover-yaml"></pre>
+    </details>
+    <div class="row-actions">
+      <button id="discover-reload-btn">stacks.yml im laufenden Container neu laden</button>
+      <button id="discover-close-btn">Schliessen</button>
+    </div>
+  </section>
 
   <main id="list"></main>
 

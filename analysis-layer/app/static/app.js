@@ -2,6 +2,10 @@ const listEl = document.getElementById("list");
 const rowTemplate = document.getElementById("row-template");
 const applyBtn = document.getElementById("apply-btn");
 const rescanBtn = document.getElementById("rescan-btn");
+const discoverBtn = document.getElementById("discover-btn");
+const discoverPanel = document.getElementById("discover-panel");
+const discoverReloadBtn = document.getElementById("discover-reload-btn");
+const discoverCloseBtn = document.getElementById("discover-close-btn");
 
 let currentData = [];
 const selectedContainers = new Set();
@@ -161,6 +165,49 @@ applyBtn.addEventListener("click", async () => {
   }
   applyBtn.textContent = "Ausgewaehlte aktualisieren";
   await fetchStatus();
+});
+
+discoverBtn.addEventListener("click", async () => {
+  discoverBtn.textContent = "Lese Portainer aus ...";
+  discoverBtn.disabled = true;
+  try {
+    const res = await fetch("/api/discover-stacks", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) {
+      alert("Fehler: " + (data.detail || res.statusText));
+      return;
+    }
+
+    const parts = [];
+    parts.push(`${data.added.length} neue Container gefunden.`);
+    if (data.updated.length) parts.push(`${data.updated.length} bestehende Eintraege aktualisiert (Stack/Environment geaendert).`);
+    if (data.auto_repo.length) parts.push(`${data.auto_repo.length}x github_repo automatisch erkannt (org.opencontainers.image.source-Label).`);
+    if (data.needs_repo.length) parts.push(`${data.needs_repo.length}x github_repo noch offen (manuell ergaenzen): ${data.needs_repo.join(", ")}`);
+    if (data.missing.length) parts.push(`${data.missing.length} bisher konfigurierte Container nicht mehr gefunden (unveraendert gelassen): ${data.missing.join(", ")}`);
+    if (data.errors.length) parts.push(`Fehler bei einzelnen Environments: ${data.errors.join(" | ")}`);
+    parts.push(`Geschrieben nach: ${data.written_to} (im Container - auf dem NAS unter deinem CONFIG_DIR/data/analysis/).`);
+
+    discoverPanel.querySelector(".discover-summary").innerHTML = parts.map((p) => `<p>${p}</p>`).join("");
+    discoverPanel.querySelector(".discover-yaml").textContent = data.yaml;
+    discoverPanel.hidden = false;
+    discoverPanel.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    alert("Fehler bei der Discovery: " + err);
+  } finally {
+    discoverBtn.textContent = "Stacks entdecken";
+    discoverBtn.disabled = false;
+  }
+});
+
+discoverReloadBtn.addEventListener("click", async () => {
+  const res = await fetch("/api/reload-config", { method: "POST" });
+  const data = await res.json();
+  alert(`stacks.yml neu geladen: ${data.containers.length} Container konfiguriert.`);
+  fetchStatus();
+});
+
+discoverCloseBtn.addEventListener("click", () => {
+  discoverPanel.hidden = true;
 });
 
 fetchStatus();

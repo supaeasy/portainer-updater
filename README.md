@@ -81,17 +81,31 @@ under one directory (`CONFIG_DIR`, default `/volume2/docker/portainer-updater`):
 ```
 /volume2/docker/portainer-updater/
 ├── analysis-layer/       # from this repo: Dockerfile, requirements.txt, app/
-└── stacks.yml            # your filled-in copy of stacks.yml.example
+└── stacks.yml            # can start out as just "stacks: []" - see below
 ```
 
 `data/wud` and `data/analysis` (SQLite storage) get created automatically on
-first start - no need to pre-create those.
+first start - no need to pre-create those. `stacks.yml` itself, though, has
+to exist as a *file* before the first deploy (even if empty, i.e. just
+`stacks: []`) - if it doesn't, Docker's bind mount creates a directory in its
+place instead, which breaks the container on startup.
 
-Fill in `stacks.yml`: for every container you want watched, enter the exact
-Docker container name, the Portainer stack name, the Portainer environment
-ID, and the GitHub repo (`owner/repo`) used for the changelog analysis.
-Containers without an entry show up on the dashboard flagged as "not
-configured in stacks.yml", but are neither analyzed nor updated
+You don't have to fill in `stacks.yml` by hand: once the stack is running,
+click **"Stacks entdecken"** ("Discover stacks") on the dashboard. It reads
+every stack from the Portainer API, matches containers to stacks via their
+`com.docker.compose.project` label, and fills in the container name,
+Portainer stack name and environment ID automatically - merged with whatever
+is already in `stacks.yml` (existing `github_repo`/`notes` you've already set
+are never overwritten). It also tries to auto-detect `github_repo` from an
+image's `org.opencontainers.image.source` OCI label when the image sets one;
+entries where that's not possible are marked with a `TODO` comment for you to
+fill in by hand. It writes the result to `data/analysis/stacks.discovered.yml`
+on the host and shows it directly in the dashboard - review it, copy what you
+want into the real `stacks.yml` on the host, then click "stacks.yml im
+laufenden Container neu laden" (or restart the container) to pick it up.
+
+Containers without a `stacks.yml` entry show up on the dashboard flagged as
+"not configured in stacks.yml", but are neither analyzed nor updated
 automatically.
 
 ### 3. Configure environment variables

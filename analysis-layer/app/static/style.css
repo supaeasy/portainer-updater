@@ -131,3 +131,23 @@ button.primary { background: var(--accent); color: white; border-color: var(--ac
 .row-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 
 .empty-state { color: var(--muted); padding: 2rem 0; text-align: center; }
+
+#discover-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.discover-summary p { margin: 0.25rem 0; }
+
+.discover-yaml {
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  max-height: 400px;
+  overflow: auto;
+  background: rgba(0,0,0,0.15);
+  padding: 0.5rem;
+  border-radius: 4px;
+}

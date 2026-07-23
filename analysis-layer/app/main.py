@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -7,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, pipeline, portainer_client, storage, wud_client
+from . import config, discovery, pipeline, portainer_client, storage, wud_client
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
@@ -53,6 +54,47 @@ async def webhook_wud(payload: dict):
 async def api_rescan():
     await pipeline.rescan_all(_stacks_config)
     return {"ok": True}
+
+
+@app.post("/api/discover-stacks")
+async def api_discover_stacks():
+    """Liest alle Portainer-Stacks/-Container aus und generiert daraus eine
+    (mit der aktuell geladenen stacks.yml gemergte) Vorschlagsdatei. Schreibt
+    NICHT direkt in stacks.yml (die ist read-only gemountet) - Ergebnis landet
+    zusaetzlich unter data/stacks.discovered.yml, review + Uebernahme von Hand."""
+    if not config.PORTAINER_URL or not config.PORTAINER_API_KEY:
+        raise HTTPException(400, "PORTAINER_URL/PORTAINER_API_KEY nicht konfiguriert")
+
+    try:
+        result = await discovery.discover(_stacks_config)
+    except Exception as exc:  # noqa: BLE001
+        log.exception("Discovery fehlgeschlagen")
+        raise HTTPException(502, f"Portainer-Abfrage fehlgeschlagen: {exc}") from None
+
+    yaml_text = discovery.render_yaml(result["entries"])
+    out_path = os.path.join(os.path.dirname(config.DB_PATH), "stacks.discovered.yml")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(yaml_text)
+
+    return {
+        "yaml": yaml_text,
+        "written_to": out_path,
+        "added": result["added"],
+        "updated": result["updated"],
+        "auto_repo": result["auto_repo"],
+        "needs_repo": result["needs_repo"],
+        "missing": result["missing"],
+        "errors": result["errors"],
+    }
+
+
+@app.post("/api/reload-config")
+async def api_reload_config():
+    """Laedt stacks.yml neu ein, ohne den Container neu starten zu muessen
+    (z.B. nachdem eine mit /api/discover-stacks erzeugte Datei uebernommen wurde)."""
+    global _stacks_config
+    _stacks_config = config.load_stacks_config()
+    return {"ok": True, "containers": sorted(_stacks_config.keys())}
 
 
 @app.post("/api/analyze/{container}")

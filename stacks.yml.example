@@ -1,6 +1,12 @@
 # Kopiere diese Datei nach stacks.yml und trage deine echten Werte ein.
 # stacks.yml wird nicht ins Repo committed (siehe .gitignore).
 #
+# Einfacher als von Hand: sobald der Stack einmal laeuft (auch mit einer
+# leeren stacks.yml, d.h. nur "stacks:" ohne Eintraege), auf "Stacks
+# entdecken" im Dashboard klicken - liest container/portainer_stack_name/
+# portainer_endpoint_id automatisch aus der Portainer-API aus und versucht
+# github_repo per OCI-Label zu erraten. Siehe README.
+#
 # container:              exakter Docker-Containername, wie WUD/Portainer ihn zeigt
 # portainer_stack_name:   Name des Stacks in Portainer (nur fuer die Anzeige im Dashboard)
 # portainer_endpoint_id:  Environment-ID in Portainer (Portainer UI -> Environments,

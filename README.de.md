@@ -83,18 +83,34 @@ Default `/volume2/docker/portainer-updater`):
 ```
 /volume2/docker/portainer-updater/
 ├── analysis-layer/       # aus diesem Repo: Dockerfile, requirements.txt, app/
-└── stacks.yml            # deine ausgefuellte Kopie von stacks.yml.example
+└── stacks.yml            # kann zu Beginn einfach "stacks: []" sein - siehe unten
 ```
 
 `data/wud` und `data/analysis` (SQLite-Speicher) werden beim ersten Start
-automatisch angelegt - die musst du nicht vorher erstellen.
+automatisch angelegt - die musst du nicht vorher erstellen. `stacks.yml`
+selbst muss aber schon vor dem ersten Deploy als *Datei* existieren (notfalls
+leer, also nur `stacks: []`) - sonst legt Docker beim Bind-Mount stattdessen
+ein Verzeichnis an dieser Stelle an, was den Container beim Start zum
+Absturz bringt.
 
-`stacks.yml` ausfuellen: pro Container, der ueberwacht werden soll, den
-exakten Docker-Containernamen, den Portainer-Stacknamen, die
-Portainer-Environment-ID und das GitHub-Repo (`owner/repo`) fuer die
-Changelog-Analyse eintragen. Container ohne Eintrag tauchen im Dashboard mit
-dem Hinweis "nicht in stacks.yml konfiguriert" auf, werden aber nicht
-automatisch analysiert oder aktualisiert.
+`stacks.yml` musst du nicht von Hand ausfuellen: sobald der Stack laeuft,
+auf **"Stacks entdecken"** im Dashboard klicken. Das liest alle Stacks ueber
+die Portainer-API aus, ordnet Container ueber ihr
+`com.docker.compose.project`-Label den Stacks zu und traegt Containername,
+Portainer-Stackname und Environment-ID automatisch ein - gemergt mit dem, was
+schon in `stacks.yml` steht (bereits gesetzte `github_repo`/`notes` werden nie
+ueberschrieben). Zusaetzlich wird versucht, `github_repo` automatisch aus dem
+OCI-Label `org.opencontainers.image.source` eines Images zu erkennen, falls
+das Image so ein Label setzt; wo das nicht klappt, wird die Zeile mit einem
+`TODO`-Kommentar markiert. Das Ergebnis landet als
+`data/analysis/stacks.discovered.yml` auf dem Host und wird direkt im
+Dashboard angezeigt - pruefen, was du davon in die echte `stacks.yml` auf dem
+Host uebernehmen willst, dann auf "stacks.yml im laufenden Container neu
+laden" klicken (oder den Container neu starten), damit es geladen wird.
+
+Container ohne `stacks.yml`-Eintrag tauchen im Dashboard mit dem Hinweis
+"nicht in stacks.yml konfiguriert" auf, werden aber nicht automatisch
+analysiert oder aktualisiert.
 
 ### 3. Umgebungsvariablen konfigurieren
 
